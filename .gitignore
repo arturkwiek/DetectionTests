@@ -1,0 +1,11 @@
+# Środowiska Pythona (Linux/WSL i Windows)
+.venv/
+.venv-win/
+__pycache__/
+
+# Modele - pobierane automatycznie przy pierwszym uruchomieniu
+*.pt
+shape_predictor_68_face_landmarks.dat
+
+# Zrzuty klatek (klawisz "s")
+zrzuty/
