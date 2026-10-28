@@ -19,6 +19,7 @@ Uruchomienie:
     python yolo_kamera_obiekty_pozycja.py --kamera 1            # inna kamera USB
     python yolo_kamera_obiekty_pozycja.py --nakladki C:\\moje\\obrazki
     python yolo_kamera_obiekty_pozycja.py --nakladka-skala 1.2 --nakladka-przesun-y -0.1
+    python Yolo68andPose.py --kamera http://172.22.128.1:8080/  # WSL: strumień z Windows
 
 Klawisze w oknie podglądu:
     q / Esc  - wyjście
@@ -71,7 +72,9 @@ GRUPY_TWARZY = [
 
 def parse_args():
     ap = argparse.ArgumentParser(description="YOLO obiekty + pozycja + twarz 68 + nakładki z kamery USB")
-    ap.add_argument("--kamera", type=int, default=0, help="indeks kamery USB (0, 1, 2...)")
+    ap.add_argument("--kamera", default="0",
+                    help="indeks kamery USB (0, 1, 2...) albo adres strumienia, "
+                         "np. http://172.22.128.1:8080/ (patrz strumien_kamery.py)")
     ap.add_argument("--model-obiekty", default="yolo11n.pt", help="model detekcji obiektów")
     ap.add_argument("--model-pozycja", default="yolo11n-pose.pt", help="model detekcji pozycji")
     ap.add_argument("--conf", type=float, default=0.35, help="próg pewności YOLO (0-1)")
@@ -98,6 +101,14 @@ def parse_args():
 # ---------------------------------------------------------------- kamera
 
 def otworz_kamere(indeks, szer, wys):
+    if not indeks.isdigit():
+        # adres strumienia (np. MJPEG z Windows dla WSL) - rozdzielczość ustala nadawca
+        cap = cv2.VideoCapture(indeks, cv2.CAP_FFMPEG)
+        if not cap.isOpened():
+            raise RuntimeError(f"Nie można otworzyć strumienia {indeks}. "
+                               f"Czy strumien_kamery.py działa po stronie Windows?")
+        return cap
+    indeks = int(indeks)
     # Na Windows DirectShow otwiera kamery USB szybciej i stabilniej
     backend = cv2.CAP_DSHOW if platform.system() == "Windows" else cv2.CAP_ANY
     cap = cv2.VideoCapture(indeks, backend)
